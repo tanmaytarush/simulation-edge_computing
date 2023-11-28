@@ -1,0 +1,179 @@
+Environment Variables :-
+
+
+n_actions: Number of possible actions in the environment.
+
+n_features: Number of features (not used directly in the code).
+
+transmit_power: Transmit power.
+
+bandwidth: Bandwidth.
+
+M_computing_capacity: Maximum computing capacity.
+
+noise_PSD: Noise Power Spectral Density.
+
+kn: A constant value (not described in the code).
+
+Ad: A constant representing some value.
+
+carrier_frequency: Carrier frequency.
+
+p: A constant value (used in calculations).
+
+alpha: A constant used to calculate rewards.
+
+beta: A constant used to calculate rewards.
+
+residual_radio: Residual radio resources.
+
+residual_computing: Residual computing resources.
+
+Fmax: Maximum computing capacity.
+
+Wmax: Maximum bandwidth.
+
+reward_list: A list to store rewards over time.
+
+
+
+
+
+
+
+
+Description Code :-
+
+MAX_EPISODES = 3000  # Maximum number of episodes for training.
+MEMORY_CAPACITY = 10000  # Maximum size of the replay memory.
+BATCH_SIZE = 32  # Batch size for training the neural network.
+
+# Deep Q Network parameters
+class DeepQNetwork(object):
+    def __init__(
+            self,
+            n_actions,
+            n_features,
+            learning_rate=0.1,  # Learning rate for the neural network's optimizer.
+            reward_decay=0.001,  # Reward decay factor in the Q-learning update.
+            e_greedy=0.99,  # Initial epsilon-greedy exploration probability.
+            replace_target_iter=200,  # Frequency of updating target network parameters.
+            memory_size=MEMORY_CAPACITY,  # Size of replay memory.
+            batch_size=BATCH_SIZE,  # Batch size for training.
+            output_graph=False,
+    ):
+        self.n_actions = n_actions  # Number of possible actions.
+        self.n_features = n_features  # Number of input features.
+        self.lr = learning_rate  # Learning rate.
+        self.gamma = reward_decay  # Reward decay factor.
+        self.epsilon_max = e_greedy  # Maximum epsilon for epsilon-greedy exploration.
+        self.replace_target_iter = replace_target_iter  # Frequency of updating target network.
+        self.memory_size = memory_size  # Size of replay memory.
+        self.batch_size = batch_size  # Batch size for training.
+        self.epsilon = 0.9  # Initial value of epsilon (exploration probability).
+
+        # Total learning step
+        self.learn_step_counter = 0
+
+        # Initialize replay memory [s, a, r, s_]
+        # Each entry stores the current state, action, reward, and next state.
+        self.memory = np.zeros(
+            (MEMORY_CAPACITY, n_features * 2 + 2), dtype=np.float32)
+
+        # Build the neural network.
+        self._build_net()
+
+        # Operations to update target network parameters.
+        t_params = tf.get_collection(
+            tf.GraphKeys.GLOBAL_VARIABLES, scope='target_net')
+        e_params = tf.get_collection(
+            tf.GraphKeys.GLOBAL_VARIABLES, scope='eval_net')
+
+        with tf.variable_scope('hard_replacement'):
+            self.target_replace_op = [
+                tf.assign(t, e) for t, e in zip(t_params, e_params)]
+
+        self.sess = tf.Session()
+
+        self.sess.run(tf.global_variables_initializer())
+        self.cost_his = []  # Store the cost (loss) during training.
+
+# Environment parameters
+env = Environment()
+action_space = ['0', '1']
+n_actions = len(action_space)  # Number of possible actions.
+n_features = 7  # Number of input features.
+
+# Initialize the Deep Q Network
+RL = DeepQNetwork(n_actions, n_features, output_graph=False)
+
+T = 100  # Maximum number of time steps in each episode.
+var = 0.1  # Control exploration (epsilon-greedy strategy).
+episode_list = []  # List to store episode rewards.
+delay_list = []  # List to store delay values.
+actions = []  # List to store chosen actions.
+offload = 0  # Counter for offloading actions.
+local = 0  # Counter for local actions.
+penalty = 5  # Penalty value (not used in the code).
+delay = 0  # Delay value (not used in the code).
+r = 0  # Reward (initialized to 0).
+
+# Training loop
+for episode in range(MAX_EPISODES):
+    # ... Rest of the code ...
+
+
+
+
+
+
+Description :-
+
+The provided code is an implementation of a Deep Q-Network (DQN) for reinforcement learning in a custom environment. Below is a description of the code's functionality and structure:
+
+1. **Initialization Parameters**:
+   - `MAX_EPISODES`: The maximum number of episodes for training.
+   - `MEMORY_CAPACITY`: The maximum size of the replay memory.
+   - `BATCH_SIZE`: The batch size for training the neural network.
+
+2. **Deep Q Network Class** (`DeepQNetwork`):
+   - This class defines the DQN model and its training process.
+   - The constructor (`__init__`) accepts various parameters for configuring the network:
+     - `n_actions`: The number of possible actions.
+     - `n_features`: The number of input features.
+     - `learning_rate`: The learning rate for the neural network's optimizer.
+     - `reward_decay`: The reward decay factor in the Q-learning update.
+     - `e_greedy`: The initial epsilon-greedy exploration probability.
+     - `replace_target_iter`: The frequency of updating target network parameters.
+     - `memory_size`: The size of the replay memory.
+     - `batch_size`: The batch size for training.
+     - `output_graph`: Whether to output a TensorFlow graph visualization (not used in the code).
+   - The class initializes various attributes and constructs two neural networks: the evaluation network (`eval_net`) and the target network (`target_net`).
+   - It also defines operations for updating target network parameters.
+
+3. **Environment and Action Parameters**:
+   - `env`: An instance of the custom environment (`Environment`) used for training.
+   - `action_space`: A list of action labels ('0' and '1').
+   - `n_actions`: The number of possible actions (length of `action_space`).
+   - `n_features`: The number of input features for the environment.
+
+4. **DQN Initialization**:
+   - An instance of the `DeepQNetwork` class (`RL`) is created with the specified parameters, including the number of actions and input features.
+
+5. **Training Loop**:
+   - The code enters a training loop that iterates over episodes (up to `MAX_EPISODES`).
+   - For each episode, there is an inner loop that iterates over time steps (up to `T`).
+   - Within each time step, the code interacts with the environment:
+     - It observes the current state (`obs`).
+     - Chooses an action using an epsilon-greedy strategy based on the current Q-values from the DQN.
+     - Executes the chosen action and receives a reward from the environment.
+     - Stores the observed state, action, reward, and next state in the replay memory.
+   - After each episode, the DQN learns from the replay memory by sampling batches of experiences and updating its Q-values.
+   - Various statistics, such as episode rewards, are collected for analysis.
+
+6. **Reward and Action Tracking**:
+   - The code keeps track of episode rewards (`episode_list`), delay values (`delay_list`), chosen actions (`actions`), and other counters (`offload`, `local`, etc.) for analysis.
+
+Overall, this code implements a basic DQN training loop in a custom environment where an agent learns to choose between two actions 
+(offloading or local processing) based on observed states and rewards. 
+The DQN aims to maximize its cumulative reward over multiple episodes through Q-value updates and exploration strategies.
